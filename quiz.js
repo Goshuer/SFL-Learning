@@ -1,6 +1,4 @@
 // quiz.js
-
-// --- CSV Loader (simple) ---
 async function loadCSV(url) {
     let res = await fetch(url);
     let text = await res.text();
@@ -32,29 +30,36 @@ const progressBox = document.getElementById("progress");
 // --- GLOBAL STATE ---
 let allPlayers = [];
 let selectedClubs = [];
-let progress = {}; // { [playerId]: Zahl }
+let progress = {};
 let filteredPlayers = [];
 let currentQuizPlayer = null;
 let quizActive = true;
 
 // --- LocalStorage helpers ---
-function saveProgress() {
-    localStorage.setItem("blsl_quiz", JSON.stringify(progress));
-}
-function loadProgress() {
-    let data = localStorage.getItem("blsl_quiz");
-    progress = data ? JSON.parse(data) : {};
-}
+function saveProgress() { localStorage.setItem("blsl_quiz", JSON.stringify(progress)); }
+function loadProgress() { let data = localStorage.getItem("blsl_quiz"); progress = data ? JSON.parse(data) : {}; }
 
 // --- Club Selection ---
 function renderClubSelector() {
     const clubsSet = {};
     allPlayers.forEach(p => clubsSet[p['Club Name']] = p['Club Badge URL']);
     clubBar.innerHTML = "";
+    // "Alle auswählen/abwählen"
+    let allSelected = (Object.keys(clubsSet).every(club => selectedClubs.includes(club)));
+    let btnAll = document.createElement("button");
+    btnAll.className = "club-btn-all" + (allSelected ? " selected" : "");
+    btnAll.innerHTML = `<img src="${Object.values(clubsSet)[0]}"><span>${allSelected ? "Alle abwählen" : "Alle auswählen"}</span>`;
+    btnAll.onclick = () => {
+        if (allSelected) selectedClubs = []; else selectedClubs = Object.keys(clubsSet);
+        renderClubSelector(); resetQuiz();
+    };
+    clubBar.appendChild(btnAll);
+
     Object.entries(clubsSet).forEach(([name, url]) => {
         let btn = document.createElement("button");
         btn.className = "club-btn" + (selectedClubs.includes(name) ? " selected" : "");
-        btn.innerHTML = `<img src="${url}"><br><span style="font-size: .8em;">${name}</span>`;
+        btn.innerHTML = `<img src="${url}" style="aspect-ratio:1/1;">`;
+        btn.title = name;
         btn.addEventListener("click", () => {
             if (selectedClubs.includes(name)) {
                 selectedClubs = selectedClubs.filter(club => club !== name);
@@ -75,13 +80,12 @@ function renderProgress() {
     progressBox.textContent = `${learned}/${teamPlayers.length} gelernt`;
 }
 
-// --- Filter Players for Quiz (not yet learned, or 1x gewusst) ---
+// --- Filter Players for Quiz ---
 function updateFilteredPlayers() {
-    filteredPlayers = allPlayers.filter(p => selectedClubs.includes(p['Club Name'])
-        && (progress[p.id] || 0) < 2);
+    filteredPlayers = allPlayers.filter(p => selectedClubs.includes(p['Club Name']) && (progress[p.id] || 0) < 2);
 }
 
-// --- Random Quiz Player und Antwortoptionen auswählen ---
+// --- Random Quiz Player ---
 function pickQuizPlayer() {
     updateFilteredPlayers();
     if (filteredPlayers.length === 0) {
@@ -102,7 +106,6 @@ function pickQuizPlayer() {
     quizActive = true;
     let optionsPool = allPlayers.filter(p => selectedClubs.includes(p['Club Name']));
     currentQuizPlayer = filteredPlayers[Math.floor(Math.random() * filteredPlayers.length)];
-    // Antwortoptionen: 3 weitere aus gleichem Team, keine Dopplung, mischen.
     let sameClubPlayers = optionsPool.filter(p => p['Club Name'] === currentQuizPlayer['Club Name'] && p.id !== currentQuizPlayer.id);
     let others = shuffle(sameClubPlayers).slice(0, 3);
     let options = shuffle([currentQuizPlayer, ...others]);
@@ -112,15 +115,27 @@ function pickQuizPlayer() {
 // --- Quizanzeige bauen ---
 function renderQuiz(player, options) {
     quizBody.innerHTML = `
-        <div style="display:flex;justify-content:center;align-items:center;">
-            <img class="player-img" src="${player['Player Image URL']}" alt="Spielerfoto">
-        </div>
-        <div class="info-row">
-            <img class="info-icon" src="${player['Club Badge URL']}" title="${player['Club Name']}">
-            <img class="info-icon" src="${player['Nationality 1 Flag URL']}" title="${player['Nationality 1']}">
-            ${player['Nationality 2 Flag URL'] ? `<img class="info-icon" src="${player['Nationality 2 Flag URL']}" title="${player['Nationality 2']}">` : ""}
-            <span class="info-label">${player.Position || ""}</span>
-            <span class="info-label">#${player['Jersey Number']}</span>
+        <div class="quiz-layout">
+            <div class="player-img-wrap">
+                <img class="player-img" src="${player['Player Image URL']}" alt="Spielerfoto">
+            </div>
+            <div class="info-col">
+                <div class="circle-icon" title="Club">
+                  <img src="${player['Club Badge URL']}" style="aspect-ratio:1/1;">
+                </div>
+                <div class="circle-icon" title="Flagge 1">
+                  <img src="${player['Nationality 1 Flag URL']}" style="object-fit:contain; aspect-ratio:7/5;">
+                </div>
+                ${player['Nationality 2 Flag URL'] ? `<div class="circle-icon" title="Flagge 2">
+                  <img src="${player['Nationality 2 Flag URL']}" style="object-fit:contain; aspect-ratio:7/5;">
+                </div>` : ""}
+                <div class="circle-icon" title="Position">
+                  <span class="info-label">${player.Position || ""}</span>
+                </div>
+                <div class="circle-icon" title="Trikotnummer">
+                  <span class="info-label">#${player['Jersey Number']}</span>
+                </div>
+            </div>
         </div>
         <div class="ans-btns" id="ansBlock"></div>
     `;
@@ -140,7 +155,6 @@ function handleAnswer(opt, btn, player, options) {
     let isCorrect = (opt.id === player.id);
     if (isCorrect) {
         btn.classList.add("correct");
-        // Fortschritt erhöhen (max 2), speichern
         progress[player.id] = Math.min((progress[player.id] || 0) + 1, 2);
         saveProgress();
         renderProgress();
@@ -149,7 +163,6 @@ function handleAnswer(opt, btn, player, options) {
         let ansBtns = [...document.getElementsByClassName("ans-btn")];
         let correctBtn = ansBtns.find(b => b.textContent === player['Player Name']);
         correctBtn.classList.add("show-correct");
-        // But Progress only if not correct
         setTimeout(pickQuizPlayer, 1200);
     }
 }
@@ -182,7 +195,6 @@ function resetProgress() {
 (async function () {
     loadProgress();
     allPlayers = await loadCSV("spieler.csv");
-    // Standard alle Clubs wählen (oder nach Wunsch) 
     selectedClubs = [...new Set(allPlayers.map(p => p['Club Name']))];
     renderClubSelector();
     renderProgress();
