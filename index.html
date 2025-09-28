@@ -29,7 +29,7 @@
     user-select: none;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
   }
   .club-select input[type="checkbox"] {
     width: 20px;
@@ -123,24 +123,25 @@
   .circle-icon.club-icon {
     background: #fff;
   }
-  /* Morph aus Club-Farbe */
+  /* Keine weißen BG für Nr. und Position, Fontfarbe weiss */
   .circle-icon.position-icon, .circle-icon.number-icon {
-    color: #fff;
-    font-family: \"Arial Black\", Arial, sans-serif;
+    color: white;
+    font-family: "Arial Black", Arial, sans-serif;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.6em;
+    font-weight: 900;
   }
   /* Besonderheiten Trikotnummer Font */
   @font-face {
     font-family: 'JerseyFont';
-    src: local('Arial Black'), local('Arial'); /* Platzhalter für echte Trikotfonts */
+    src: local('Arial Black'), local('Arial');
     font-weight: 900;
   }
   @font-face {
     font-family: 'PositionFont';
-    src: local('Segoe UI Black'), local('Segoe UI'); /* Platzhalter für Trikotpositionsschrift */
+    src: local('Segoe UI Black'), local('Segoe UI');
     font-weight: 700;
   }
   .circle-icon.number-icon {
@@ -183,7 +184,7 @@
     background: #ea4e3d !important;
     color: #fff;
   }
-  /* Anim */
+  /* Animationen */
   @keyframes blink-green {
     0% { background: #5fd765; }
     50% { background: #ace6ad; }
