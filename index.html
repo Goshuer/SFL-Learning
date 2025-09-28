@@ -37,25 +37,33 @@
     cursor: pointer;
   }
   .club-btn {
-    border: none;
-    background: transparent;
-    opacity: 0.5;
-    cursor: pointer;
-    border-radius: 50%;
-    transition: opacity 0.2s, border 0.2s;
-  }
-  .club-btn.selected {
-    opacity: 1;
-    border: 2px solid #279647;
-  }
-  .club-btn img {
-    width: 42px;
-    height: 42px;
-    object-fit: contain;
-    border-radius: 50%;
-    background: #f4f4f4;
-    display: block;
-  }
+  border: none;
+  background: transparent;
+  opacity: 0.5;
+  cursor: pointer;
+  border-radius: 50%;
+  width: 50px;      /* explizit quadratisch setzen */
+  height: 50px;     /* explizit quadratisch setzen */
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s, border 0.2s;
+}
+
+.club-btn.selected {
+  opacity: 1;
+  border: 2px solid #279647;
+}
+
+.club-btn img {
+  width: 40px;       /* Bild etwas kleiner als Container */
+  height: 40px;
+  object-fit: contain;
+  border-radius: 50%;  /* Bild eckig auf rund */
+  background: #f4f4f4;
+}
+
   /* Fortschrittsanzeige */
   .progressbar {
     text-align: right;
@@ -239,3 +247,4 @@
 <script src="quiz.js"></script>
 </body>
 </html>
+
