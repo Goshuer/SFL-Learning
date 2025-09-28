@@ -1,4 +1,3 @@
-// quiz.js
 async function loadCSV(url) {
   let res = await fetch(url);
   let text = await res.text();
@@ -46,12 +45,13 @@ function renderClubSelector() {
   allPlayers.forEach(p => clubsSet[p['Club Name']] = p['Club Badge URL']);
   clubBar.innerHTML = "";
 
-  // Checkbox "Alle auswählen"
+  // Checkbox «Alle auswählen» mit Label
   let allSelected = (Object.keys(clubsSet).every(club => selectedClubs.includes(club)));
   let labelAll = document.createElement('label');
   let chkAll = document.createElement('input');
   chkAll.type = 'checkbox';
   chkAll.checked = allSelected;
+  chkAll.setAttribute('aria-label', 'Alle Teams auswählen');
   chkAll.onchange = () => {
     selectedClubs = chkAll.checked ? Object.keys(clubsSet) : [];
     renderClubSelector();
@@ -64,7 +64,7 @@ function renderClubSelector() {
   Object.entries(clubsSet).forEach(([name, url]) => {
     let btn = document.createElement("button");
     btn.className = "club-btn" + (selectedClubs.includes(name) ? " selected" : "");
-    btn.innerHTML = `<img src="${url}" style="aspect-ratio:1/1;">`;
+    btn.innerHTML = `<img src="${url}" alt="${name} Logo" style="aspect-ratio:1/1;">`;
     btn.title = name;
     btn.addEventListener("click", () => {
       if (selectedClubs.includes(name)) {
@@ -116,9 +116,14 @@ function pickQuizPlayer() {
 }
 
 function renderQuiz(player, options) {
-  // Hauptfarbe aus Clubwappen ermitteln (sample: statisch hier wegen Einfachheit)
-  // Für korrekte Hauptfarb-Ermittlung brauchst du ggf. eine Farbpalette mit HEX-Werten
-  let clubColor = "#279647"; // Default Grün, anpassbar anhand Deines Logos
+  // Kleiner Hack: Hier kannst du die Hauptfarbe pro Club definieren (Palette manuell oder mit Farbtool...)
+  // Beispiel: Clubfarben manuell definieren (kann erweitert / automatisiert werden)
+  const clubColors = {
+    'FC Basel': '#ba0c2f',
+    'FC Zürich': '#0055b7',
+    'Young Boys': '#ffd83d'
+  };
+  let clubColor = clubColors[player['Club Name']] || '#279647';
 
   quizBody.innerHTML = `
     <div class="quiz-layout">
@@ -127,13 +132,13 @@ function renderQuiz(player, options) {
       </div>
       <div class="info-col">
         <div class="circle-icon club-icon" title="Club">
-          <img src="${player['Club Badge URL']}" style="aspect-ratio:1/1;">
+          <img src="${player['Club Badge URL']}" alt="Clubwappen" style="aspect-ratio:1/1;">
         </div>
         <div class="circle-icon" title="Flagge 1" style="color:inherit;">
-          <img src="${player['Nationality 1 Flag URL']}" style="object-fit:contain; aspect-ratio:7/5;">
+          <img src="${player['Nationality 1 Flag URL']}" alt="Flagge 1" style="object-fit:contain; aspect-ratio:7/5;">
         </div>
         ${player['Nationality 2 Flag URL'] ? `<div class="circle-icon" title="Flagge 2" style="color:inherit;">
-          <img src="${player['Nationality 2 Flag URL']}" style="object-fit:contain; aspect-ratio:7/5;">
+          <img src="${player['Nationality 2 Flag URL']}" alt="Flagge 2" style="object-fit:contain; aspect-ratio:7/5;">
         </div>` : ""}
         <div class="circle-icon position-icon" title="Position" style="background-color:${clubColor};">
           ${player.Position || ""}
